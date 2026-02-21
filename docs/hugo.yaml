@@ -52,7 +52,7 @@ languages:
     params:
       banner:
         message: |
-          PROJECT_NAME **v1** منتشر شد! 🎉 [تازه‌ها را ببینید]({{% relref "blog/setup-v1" %}})
+          PROJECT_NAME **v1** منتشر شد! 🎉 [تازه‌ها را ببینید]({{% relref "blog/setup-v1.md" %}})
       page:
         contextMenu:
           links:
@@ -68,7 +68,7 @@ languages:
     params:
       banner:
         message: |
-          PROJECT_NAME **v1** がリリースされました！🎉 [新着情報はこちら]({{% relref "blog/setup-v1" %}})
+          PROJECT_NAME **v1** がリリースされました！🎉 [新着情報はこちら]({{% relref "blog/setup-v1.md" %}})
       page:
         contextMenu:
           links:
@@ -84,7 +84,7 @@ languages:
     params:
       banner:
         message: |
-          PROJECT_NAME **v1** 发布啦！🎉 查看[更新内容]({{% relref "blog/setup-v1" %}})
+          PROJECT_NAME **v1** 发布啦！🎉 查看[更新内容]({{% relref "blog/setup-v1.md" %}})
       page:
         contextMenu:
           links:
@@ -100,7 +100,7 @@ languages:
     params:
       banner:
         message: |
-          PROJECT_NAME **v1** đã ra mắt! 🎉 [Xem nội dung mới]({{% relref "blog/setup-v1" %}})
+          PROJECT_NAME **v1** đã ra mắt! 🎉 [Xem nội dung mới]({{% relref "blog/setup-v1.md" %}})
       page:
         contextMenu:
           links:
@@ -288,7 +288,7 @@ params:
   banner:
     key: 'announcement-v1'
     message: |
-      PROJECT_NAME **v1** is here! 🎉 Discover [what's new]({{% relref "blog/setup-v1" %}})
+      PROJECT_NAME **v1** is here! 🎉 Discover [what's new]({{% relref "blog/setup-v1.md" %}})
 
   navbar:
     displayTitle: true

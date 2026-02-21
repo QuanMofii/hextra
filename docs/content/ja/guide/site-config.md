@@ -152,13 +152,13 @@ languages:
     params:
       banner:
         message: |
-          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1" %}})
+          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1.md" %}})
   ja:
     title: プロジェクト名
     params:
       banner:
         message: |
-          プロジェクト **v1.0** リリース！🎉 [新着はこちら]({{% relref "blog/setup-v1" %}})
+          プロジェクト **v1.0** リリース！🎉 [新着はこちら]({{% relref "blog/setup-v1.md" %}})
 ```
 
 バナーを無効にするには、その言語の `params.banner` ブロックを削除するか、`message` を空にしてください。

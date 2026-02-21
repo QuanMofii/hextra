@@ -256,13 +256,13 @@ languages:
     params:
       banner:
         message: |
-          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1" %}})
+          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1.md" %}})
   vi:
     title: Tên Dự Án
     params:
       banner:
         message: |
-          Dự án **v1.0** đã ra mắt! 🎉 [Xem thêm]({{% relref "blog/setup-v1" %}})
+          Dự án **v1.0** đã ra mắt! 🎉 [Xem thêm]({{% relref "blog/setup-v1.md" %}})
 ```
 
 Để tắt banner cho một ngôn ngữ, xóa block `params.banner` hoặc để `message` rỗng.
