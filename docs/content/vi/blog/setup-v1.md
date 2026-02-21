@@ -1,6 +1,9 @@
 ---
 title: "Thiết lập Ban đầu Dự án V.1.0"
-date: 2025-01-01
+date: 2026-02-22
+authors:
+  - name: QuanMofii
+    link: https://quanmofii.github.io/
 weight: 1
 tags:
   - Thiết lập
