@@ -1,3 +1,3 @@
-module github.com/{author}/{project_name}
+module github.com/QuanMofii/site-documentation/docs
 
 go 1.20
