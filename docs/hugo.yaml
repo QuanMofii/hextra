@@ -108,8 +108,6 @@ languages:
               icon: chatgpt
               url: "https://chatgpt.com/?hints=search&q=T%C3%B4i+%C4%91ang+xem+t%C3%A0i+li%E1%BB%87u+n%C3%A0y%3A+{url}%0AGi%C3%BAp+t%C3%B4i+hi%E1%BB%83u+c%C3%A1ch+s%E1%BB%AD+d%E1%BB%A5ng."
 
-theme: hextra
-
 module:
   hugoVersion:
     extended: true
