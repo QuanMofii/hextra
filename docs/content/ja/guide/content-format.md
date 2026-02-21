@@ -5,6 +5,9 @@ weight: 10
 
 このドキュメントは、大規模プロジェクトにおけるドキュメント作成の標準構造を説明します。目標は、チームメンバー全員にとっての一貫性、保守性、明確性を確保することです。
 
+> [!NOTE]
+> このドキュメント全体では、**User Management API** を例として使用しています。プロジェクトに適用する際は、対応するドメイン/モジュールに置き換えてください。
+
 <!--more-->
 
 ## 概要
@@ -14,7 +17,7 @@ weight: 10
 1. **はじめに** - 機能/モジュールの概要
 2. **ビジネスロジック** - ビジネスプロセスの説明
 3. **実装ロジック** - 技術的な実装の詳細
-4. **APIリファレンス** - 完全なAPIドキュメント
+4. **APIリファレンス** - 完全なAPIドキュメント（CRUD: Create, Read, Update, Delete）
 5. **テスト** - テストガイドライン
 6. **トラブルシューティング** - 一般的な問題の解決
 
@@ -27,6 +30,8 @@ weight: 10
 ### 目的
 
 システムにおけるこの機能の目的を簡潔に説明します。
+
+> **例（User Management）:** User Managementモジュールは、ユーザーの作成、更新、削除、情報照会など、システム内のユーザー管理機能を提供します。
 
 ### 範囲
 
@@ -48,15 +53,23 @@ weight: 10
 
 ### ビジネスプロセス
 
-機能のメインビジネスフローを説明します。
+機能のメインビジネスフローを図で説明します。
+
+> **例（User Management）:** 新規ユーザー作成のプロセスフロー：
 
 ```mermaid
 flowchart TD
-    A[ユーザーがリクエストを送信] --> B{トークンを検証}
-    B -->|有効| C[ビジネスロジックを処理]
-    B -->|無効| D[401エラーを返す]
-    C --> E[データベースに保存]
-    E --> F[結果を返す]
+    A[クライアントがリクエストを送信] --> B{トークンを検証}
+    B -->|無効| C[401エラーを返す]
+    B -->|有効| D{Admin権限を確認}
+    D -->|権限なし| E[403エラーを返す]
+    D -->|権限あり| F[データを検証]
+    F -->|無効| G[422エラーを返す]
+    F -->|有効| H{メールは存在する？}
+    H -->|はい| I[409エラーを返す]
+    H -->|いいえ| J[新規ユーザーを作成]
+    J --> K[確認メールを送信]
+    K --> L[201 Createdを返す]
 ```
 
 ### ビジネスルール
@@ -146,360 +159,22 @@ Auth Serviceが確認：
 
 ## 4. APIリファレンス
 
-### 4.1 新規ユーザー作成
+> [!NOTE]
+> このセクションでは、5つの基本的なCRUDエンドポイントを使用した完全なAPIドキュメントの書き方を示します。例として**User Management API**を使用しています。
 
-システムに新しいユーザーアカウントを作成します。
+### エンドポイント概要
 
-#### 基本情報
-
-| プロパティ | 値 |
-| :-------- | :- |
-| **メソッド** | `POST` |
-| **URL** | `/api/v1/users` |
-| **認証** | Bearer Token (Admin) |
-| **Content-Type** | `application/json` |
-
-#### ヘッダー
-
-| ヘッダー | 型 | 必須 | 説明 |
-| :------ | :- | :-- | :--- |
-| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
-| `Content-Type` | string | ✅ | `application/json`である必要があります |
-| `X-Request-ID` | string | ❌ | リクエスト追跡用ID。未指定の場合は自動生成 |
-| `Accept-Language` | string | ❌ | レスポンス言語。デフォルト: `ja` |
-
-#### リクエストボディ
-
-```json
-{
-  "email": "user@example.com",
-  "password": "SecureP@ss123",
-  "fullName": "山田太郎",
-  "phoneNumber": "+819012345678",
-  "role": "user",
-  "metadata": {
-    "department": "Engineering",
-    "employeeId": "EMP001"
-  }
-}
-```
-
-#### リクエストプロパティの詳細
-
-| プロパティ | 型 | 必須 | 説明 | 制約 |
-| :-------- | :- | :-- | :--- | :--- |
-| `email` | string | ✅ | ユーザーのメールアドレス。ログインユーザー名として使用 | 有効なメール、最大255文字、システム内で一意 |
-| `password` | string | ✅ | ログインパスワード | 最小8文字、大文字、小文字、数字、特殊文字を含む必要あり |
-| `fullName` | string | ✅ | フルネーム | 最小2文字、最大100文字 |
-| `phoneNumber` | string | ❌ | 電話番号 | E.164フォーマット（例: +819012345678） |
-| `role` | string | ❌ | ユーザーロール | `user`, `admin`, `moderator`のいずれか。デフォルト: `user` |
-| `metadata` | object | ❌ | カスタム追加情報 | JSONオブジェクト、最大10KB |
-| `metadata.department` | string | ❌ | 部署 | 最大50文字 |
-| `metadata.employeeId` | string | ❌ | 従業員ID | 最大20文字 |
-
-#### cURL
-
-```bash
-curl --request POST \
-  --url 'https://api.example.com/api/v1/users' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' \
-  --header 'Content-Type: application/json' \
-  --header 'X-Request-ID: req-123456' \
-  --data '{
-    "email": "user@example.com",
-    "password": "SecureP@ss123",
-    "fullName": "山田太郎",
-    "phoneNumber": "+819012345678",
-    "role": "user",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    }
-  }'
-```
-
-#### 成功レスポンス
-
-**ステータスコード:** `201 Created`
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
-    "email": "user@example.com",
-    "fullName": "山田太郎",
-    "phoneNumber": "+819012345678",
-    "role": "user",
-    "status": "pending_verification",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    },
-    "createdAt": "2024-02-20T10:30:00.000Z",
-    "updatedAt": "2024-02-20T10:30:00.000Z"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-
-#### レスポンスプロパティの詳細
-
-| プロパティ | 型 | 説明 |
-| :-------- | :- | :--- |
-| `success` | boolean | リクエスト処理ステータス。成功の場合は`true` |
-| `data.id` | string | 一意のユーザーID、`usr_`プレフィックス付きULIDフォーマット |
-| `data.email` | string | 登録されたメール |
-| `data.fullName` | string | フルネーム |
-| `data.phoneNumber` | string | 電話番号（指定された場合） |
-| `data.role` | string | 割り当てられたロール |
-| `data.status` | string | アカウントステータス: `pending_verification`, `active`, `suspended`, `deleted` |
-| `data.metadata` | object | 追加情報 |
-| `data.createdAt` | string | 作成タイムスタンプ（ISO 8601） |
-| `data.updatedAt` | string | 最終更新タイムスタンプ（ISO 8601） |
-| `meta.requestId` | string | 追跡用リクエストID |
-| `meta.timestamp` | string | リクエスト処理タイムスタンプ |
-
-#### エラーレスポンス
-
-{{< tabs >}}
-
-{{< tab name="400 Bad Request" >}}
-**原因:** リクエストボディが有効なJSONフォーマットでないか、必須フィールドが欠けている。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "BAD_REQUEST",
-    "message": "リクエストボディが無効です",
-    "details": "JSONボディを解析できません"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="401 Unauthorized" >}}
-**原因:** トークンが無効、期限切れ、または管理者権限がない。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "トークンが無効または期限切れです",
-    "details": "新しいトークンを取得するために再度ログインしてください"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="409 Conflict" >}}
-**原因:** メールがシステムに既に存在する。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "CONFLICT",
-    "message": "メールは既に使用されています",
-    "details": "メール user@example.com はシステムに既に存在します"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="422 Validation Error" >}}
-**原因:** データがバリデーション要件を満たしていない。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "データが無効です",
-    "details": [
-      {
-        "field": "password",
-        "message": "パスワードは大文字、小文字、数字、特殊文字を含む8文字以上である必要があります"
-      },
-      {
-        "field": "phoneNumber",
-        "message": "電話番号がE.164フォーマットと一致しません"
-      }
-    ]
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="500 Internal Error" >}}
-**原因:** 不明なサーバーエラー。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INTERNAL_ERROR",
-    "message": "システムエラーが発生しました",
-    "details": "後で再試行するか、サポートにお問い合わせください"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< /tabs >}}
+| メソッド | エンドポイント | 説明 | 権限 |
+| :------ | :----------- | :--- | :--- |
+| `GET` | `/api/v1/users` | ユーザー一覧（ページネーション付き） | Admin |
+| `GET` | `/api/v1/users/{id}` | ユーザー詳細情報 | User/Admin |
+| `POST` | `/api/v1/users` | 新規ユーザー作成 | Admin |
+| `PUT` | `/api/v1/users/{id}` | ユーザー情報更新 | User/Admin |
+| `DELETE` | `/api/v1/users/{id}` | ユーザー削除 | Admin |
 
 ---
 
-### 4.2 ユーザー情報の取得
-
-IDでユーザーの詳細情報を取得します。
-
-#### 基本情報
-
-| プロパティ | 値 |
-| :-------- | :- |
-| **メソッド** | `GET` |
-| **URL** | `/api/v1/users/{userId}` |
-| **認証** | Bearer Token |
-| **Content-Type** | `application/json` |
-
-#### パスパラメータ
-
-| パラメータ | 型 | 必須 | 説明 |
-| :-------- | :- | :-- | :--- |
-| `userId` | string | ✅ | 取得するユーザーID。フォーマット: `usr_<ULID>` |
-
-#### ヘッダー
-
-| ヘッダー | 型 | 必須 | 説明 |
-| :------ | :- | :-- | :--- |
-| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
-
-#### cURL
-
-```bash
-curl --request GET \
-  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
-```
-
-#### 成功レスポンス
-
-**ステータスコード:** `200 OK`
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
-    "email": "user@example.com",
-    "fullName": "山田太郎",
-    "phoneNumber": "+819012345678",
-    "role": "user",
-    "status": "active",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    },
-    "lastLoginAt": "2024-02-20T09:00:00.000Z",
-    "createdAt": "2024-02-15T10:30:00.000Z",
-    "updatedAt": "2024-02-20T09:00:00.000Z"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-
-#### エラーレスポンス
-
-{{< tabs >}}
-
-{{< tab name="401 Unauthorized" >}}
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "トークンが無効または期限切れです"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="403 Forbidden" >}}
-**原因:** ユーザーに他のユーザーの情報を閲覧する権限がない。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "FORBIDDEN",
-    "message": "このリソースへのアクセスは拒否されました",
-    "details": "自分の情報のみ閲覧できます"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="404 Not Found" >}}
-**原因:** ユーザーIDが存在しない。
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "ユーザーが見つかりません",
-    "details": "ID usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF のユーザーは存在しません"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< /tabs >}}
-
----
-
-### 4.3 ユーザー一覧（ページネーション付き）
+### 4.1 ユーザー一覧
 
 ページネーション、フィルタリング、ソートをサポートしたユーザー一覧を取得します。
 
@@ -516,19 +191,26 @@ curl --request GET \
 | パラメータ | 型 | 必須 | 説明 | デフォルト |
 | :-------- | :- | :-- | :--- | :------- |
 | `page` | integer | ❌ | ページ番号（1から開始） | `1` |
-| `limit` | integer | ❌ | ページあたりのレコード数 | `20` |
-| `sort` | string | ❌ | ソートフィールド | `createdAt` |
+| `limit` | integer | ❌ | ページあたりのレコード数（最大100） | `20` |
+| `sort` | string | ❌ | ソートフィールド: `createdAt`, `email`, `fullName` | `createdAt` |
 | `order` | string | ❌ | 順序: `asc` または `desc` | `desc` |
-| `status` | string | ❌ | ステータスでフィルタ | - |
-| `role` | string | ❌ | ロールでフィルタ | - |
+| `status` | string | ❌ | ステータスでフィルタ: `active`, `pending_verification`, `suspended` | - |
+| `role` | string | ❌ | ロールでフィルタ: `user`, `admin`, `moderator` | - |
 | `search` | string | ❌ | メールまたは名前で検索 | - |
+
+#### ヘッダー
+
+| ヘッダー | 型 | 必須 | 説明 |
+| :------ | :- | :-- | :--- |
+| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
+| `X-Request-ID` | string | ❌ | リクエスト追跡用ID |
 
 #### cURL
 
 ```bash
 curl --request GET \
   --url 'https://api.example.com/api/v1/users?page=1&limit=10&status=active&sort=createdAt&order=desc' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+  --header 'Authorization: Bearer <your_admin_token>'
 ```
 
 #### 成功レスポンス
@@ -571,24 +253,729 @@ curl --request GET \
 }
 ```
 
+#### エラーレスポンス
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "トークンが無効または期限切れです"
+  },
+  "meta": {
+    "requestId": "req-345678",
+    "timestamp": "2024-02-20T10:40:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "アクセスが拒否されました",
+    "details": "Adminのみがユーザー一覧を閲覧できます"
+  },
+  "meta": {
+    "requestId": "req-345678",
+    "timestamp": "2024-02-20T10:40:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.2 ユーザー詳細情報
+
+IDでユーザーの詳細情報を取得します。
+
+#### 基本情報
+
+| プロパティ | 値 |
+| :-------- | :- |
+| **メソッド** | `GET` |
+| **URL** | `/api/v1/users/{id}` |
+| **認証** | Bearer Token |
+
+#### パスパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+| :-------- | :- | :-- | :--- |
+| `id` | string | ✅ | ユーザーID。フォーマット: `usr_<ULID>` |
+
+#### ヘッダー
+
+| ヘッダー | 型 | 必須 | 説明 |
+| :------ | :- | :-- | :--- |
+| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
+
+#### cURL
+
+```bash
+curl --request GET \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_token>'
+```
+
+#### 成功レスポンス
+
+**ステータスコード:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "user@example.com",
+    "fullName": "山田太郎",
+    "phoneNumber": "+819012345678",
+    "role": "user",
+    "status": "active",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    },
+    "lastLoginAt": "2024-02-20T09:00:00.000Z",
+    "createdAt": "2024-02-15T10:30:00.000Z",
+    "updatedAt": "2024-02-20T09:00:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+
+#### レスポンスプロパティの詳細
+
+| プロパティ | 型 | 説明 |
+| :-------- | :- | :--- |
+| `id` | string | 一意のユーザーID、`usr_`プレフィックス付きULIDフォーマット |
+| `email` | string | 登録されたメール |
+| `fullName` | string | フルネーム |
+| `phoneNumber` | string \| null | 電話番号（指定された場合） |
+| `role` | string | ロール: `user`, `admin`, `moderator` |
+| `status` | string | ステータス: `pending_verification`, `active`, `suspended`, `deleted` |
+| `metadata` | object \| null | カスタム追加情報 |
+| `lastLoginAt` | string \| null | 最終ログインタイムスタンプ（ISO 8601） |
+| `createdAt` | string | 作成タイムスタンプ（ISO 8601） |
+| `updatedAt` | string | 最終更新タイムスタンプ（ISO 8601） |
+
+#### エラーレスポンス
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "トークンが無効または期限切れです"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このリソースへのアクセスは拒否されました",
+    "details": "自分の情報のみ閲覧できます"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ユーザーが見つかりません",
+    "details": "ID usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF のユーザーは存在しません"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.3 新規ユーザー作成（Create）
+
+システムに新しいユーザーアカウントを作成します。
+
+#### 基本情報
+
+| プロパティ | 値 |
+| :-------- | :- |
+| **メソッド** | `POST` |
+| **URL** | `/api/v1/users` |
+| **認証** | Bearer Token (Admin) |
+| **Content-Type** | `application/json` |
+
+#### ヘッダー
+
+| ヘッダー | 型 | 必須 | 説明 |
+| :------ | :- | :-- | :--- |
+| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
+| `Content-Type` | string | ✅ | `application/json`である必要があります |
+| `X-Request-ID` | string | ❌ | リクエスト追跡用ID |
+
+#### リクエストボディ
+
+```json
+{
+  "email": "newuser@example.com",
+  "password": "SecureP@ss123",
+  "fullName": "山田太郎",
+  "phoneNumber": "+819012345678",
+  "role": "user",
+  "metadata": {
+    "department": "Engineering",
+    "employeeId": "EMP001"
+  }
+}
+```
+
+#### リクエストプロパティの詳細
+
+| プロパティ | 型 | 必須 | 説明 | 制約 |
+| :-------- | :- | :-- | :--- | :--- |
+| `email` | string | ✅ | メールアドレス、ユーザー名として使用 | 有効なメール、最大255文字、一意 |
+| `password` | string | ✅ | ログインパスワード | 最小8文字、大文字、小文字、数字、特殊文字を含む必要あり |
+| `fullName` | string | ✅ | フルネーム | 2-100文字 |
+| `phoneNumber` | string | ❌ | 電話番号 | E.164フォーマット（例: +819012345678） |
+| `role` | string | ❌ | ユーザーロール | `user` \| `admin` \| `moderator`。デフォルト: `user` |
+| `metadata` | object | ❌ | 追加情報 | JSONオブジェクト、最大10KB |
+
+#### cURL
+
+```bash
+curl --request POST \
+  --url 'https://api.example.com/api/v1/users' \
+  --header 'Authorization: Bearer <your_admin_token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "newuser@example.com",
+    "password": "SecureP@ss123",
+    "fullName": "山田太郎",
+    "phoneNumber": "+819012345678",
+    "role": "user",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    }
+  }'
+```
+
+#### 成功レスポンス
+
+**ステータスコード:** `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "newuser@example.com",
+    "fullName": "山田太郎",
+    "phoneNumber": "+819012345678",
+    "role": "user",
+    "status": "pending_verification",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    },
+    "createdAt": "2024-02-20T10:30:00.000Z",
+    "updatedAt": "2024-02-20T10:30:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+
+#### エラーレスポンス
+
+{{< tabs >}}
+
+{{< tab name="400 Bad Request" >}}
+**原因:** リクエストボディが有効なJSONフォーマットでない。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "リクエストボディが無効です",
+    "details": "JSONボディを解析できません"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="401 Unauthorized" >}}
+**原因:** トークンが無効または期限切れ。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "トークンが無効または期限切れです",
+    "details": "新しいトークンを取得するために再度ログインしてください"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+**原因:** ユーザーにAdmin権限がない。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "この操作を実行する権限がありません",
+    "details": "Adminのみが新規ユーザーを作成できます"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="409 Conflict" >}}
+**原因:** メールがシステムに既に存在する。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONFLICT",
+    "message": "メールは既に使用されています",
+    "details": "メール newuser@example.com はシステムに既に存在します"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="422 Validation Error" >}}
+**原因:** データがバリデーション要件を満たしていない。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "データが無効です",
+    "details": [
+      {
+        "field": "password",
+        "message": "パスワードは大文字、小文字、数字、特殊文字を含む8文字以上である必要があります"
+      },
+      {
+        "field": "phoneNumber",
+        "message": "電話番号がE.164フォーマットと一致しません"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.4 ユーザー更新（Update）
+
+ユーザーの情報を更新します。
+
+#### 基本情報
+
+| プロパティ | 値 |
+| :-------- | :- |
+| **メソッド** | `PUT` |
+| **URL** | `/api/v1/users/{id}` |
+| **認証** | Bearer Token |
+| **Content-Type** | `application/json` |
+
+#### パスパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+| :-------- | :- | :-- | :--- |
+| `id` | string | ✅ | 更新するユーザーID。フォーマット: `usr_<ULID>` |
+
+#### ヘッダー
+
+| ヘッダー | 型 | 必須 | 説明 |
+| :------ | :- | :-- | :--- |
+| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
+| `Content-Type` | string | ✅ | `application/json`である必要があります |
+
+#### リクエストボディ
+
+> [!NOTE]
+> 更新したいフィールドのみを送信してください。送信されないフィールドは現在の値を保持します。
+
+```json
+{
+  "fullName": "田中次郎",
+  "phoneNumber": "+819087654321",
+  "metadata": {
+    "department": "Marketing",
+    "employeeId": "EMP002"
+  }
+}
+```
+
+#### リクエストプロパティの詳細
+
+| プロパティ | 型 | 必須 | 説明 | 制約 |
+| :-------- | :- | :-- | :--- | :--- |
+| `fullName` | string | ❌ | 新しいフルネーム | 2-100文字 |
+| `phoneNumber` | string | ❌ | 新しい電話番号 | E.164フォーマット |
+| `role` | string | ❌ | 新しいロール（Adminのみ） | `user` \| `admin` \| `moderator` |
+| `status` | string | ❌ | 新しいステータス（Adminのみ） | `active` \| `suspended` |
+| `metadata` | object | ❌ | 追加情報 | JSONオブジェクト、最大10KB |
+
+> [!WARNING]
+> `email`と`password`フィールドはこのエンドポイントでは更新できません。メール/パスワードの変更には専用のエンドポイントを使用してください。
+
+#### cURL
+
+```bash
+curl --request PUT \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "fullName": "田中次郎",
+    "phoneNumber": "+819087654321",
+    "metadata": {
+      "department": "Marketing",
+      "employeeId": "EMP002"
+    }
+  }'
+```
+
+#### 成功レスポンス
+
+**ステータスコード:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "user@example.com",
+    "fullName": "田中次郎",
+    "phoneNumber": "+819087654321",
+    "role": "user",
+    "status": "active",
+    "metadata": {
+      "department": "Marketing",
+      "employeeId": "EMP002"
+    },
+    "createdAt": "2024-02-15T10:30:00.000Z",
+    "updatedAt": "2024-02-20T14:00:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+
+#### エラーレスポンス
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "トークンが無効または期限切れです"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+**原因:** ユーザーに他のユーザーを更新する権限がない、またはrole/status更新時にAdminでない。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このリソースを更新する権限がありません",
+    "details": "自分の情報のみ更新できます"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ユーザーが見つかりません",
+    "details": "ID usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF のユーザーは存在しません"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="422 Validation Error" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "データが無効です",
+    "details": [
+      {
+        "field": "phoneNumber",
+        "message": "電話番号がE.164フォーマットと一致しません"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.5 ユーザー削除（Delete）
+
+システムからユーザーを削除します。
+
+#### 基本情報
+
+| プロパティ | 値 |
+| :-------- | :- |
+| **メソッド** | `DELETE` |
+| **URL** | `/api/v1/users/{id}` |
+| **認証** | Bearer Token (Admin) |
+
+#### パスパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+| :-------- | :- | :-- | :--- |
+| `id` | string | ✅ | 削除するユーザーID。フォーマット: `usr_<ULID>` |
+
+#### ヘッダー
+
+| ヘッダー | 型 | 必須 | 説明 |
+| :------ | :- | :-- | :--- |
+| `Authorization` | string | ✅ | 認証トークン。フォーマット: `Bearer <token>` |
+
+#### クエリパラメータ（オプション）
+
+| パラメータ | 型 | 必須 | 説明 | デフォルト |
+| :-------- | :- | :-- | :--- | :------- |
+| `hard` | boolean | ❌ | `true` = 完全削除、`false` = ソフト削除 | `false` |
+
+> [!WARNING]
+> `hard=true`の場合、データは完全に削除され、復元できません。デフォルトではソフト削除（ステータスを`deleted`に変更）を使用します。
+
+#### cURL
+
+```bash
+# ソフト削除（デフォルト）
+curl --request DELETE \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_admin_token>'
+
+# ハード削除（完全削除）
+curl --request DELETE \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF?hard=true' \
+  --header 'Authorization: Bearer <your_admin_token>'
+```
+
+#### 成功レスポンス
+
+**ステータスコード:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "deleted": true,
+    "deletedAt": "2024-02-20T15:00:00.000Z",
+    "hardDelete": false
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+
+#### エラーレスポンス
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "トークンが無効または期限切れです"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "ユーザーを削除する権限がありません",
+    "details": "Adminのみがユーザーを削除できます"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ユーザーが見つかりません",
+    "details": "ID usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF のユーザーは存在しません"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="409 Conflict" >}}
+**原因:** データの制約によりユーザーを削除できない。
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONFLICT",
+    "message": "ユーザーを削除できません",
+    "details": "このユーザーには関連データがあります。先にデータを削除または移行してください。"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
 ---
 
 ## 5. テスト
 
 ### ユニットテスト
 
-このモジュールのテストファイル:
+モジュールのテストファイル:
 
 {{< filetree/container >}}
   {{< filetree/folder name="tests" >}}
     {{< filetree/folder name="unit" >}}
       {{< filetree/file name="user.service.spec.ts" >}}
       {{< filetree/file name="user.controller.spec.ts" >}}
-      {{< filetree/file name="auth.service.spec.ts" >}}
     {{< /filetree/folder >}}
     {{< filetree/folder name="integration" >}}
       {{< filetree/file name="user.api.spec.ts" >}}
-      {{< filetree/file name="auth.api.spec.ts" >}}
     {{< /filetree/folder >}}
     {{< filetree/folder name="e2e" >}}
       {{< filetree/file name="user-flow.spec.ts" >}}
@@ -616,11 +1003,17 @@ npm run test:coverage
 
 | テストケース | 説明 | 期待結果 |
 | :---------- | :--- | :------ |
-| TC-001 | 有効なデータでユーザー作成 | ステータス201、ユーザー作成 |
-| TC-002 | 重複メールでユーザー作成 | ステータス409、エラーCONFLICT |
-| TC-003 | 弱いパスワードでユーザー作成 | ステータス422、バリデーションエラー |
-| TC-004 | 存在しないユーザーを取得 | ステータス404、エラーNOT_FOUND |
-| TC-005 | トークンなしでアクセス | ステータス401、エラーUNAUTHORIZED |
+| TC-001 | GET /users - ページネーション付きリスト | ステータス200、正しいレコード数を返す |
+| TC-002 | GET /users/:id - 存在するユーザーを取得 | ステータス200、ユーザー情報を返す |
+| TC-003 | GET /users/:id - 存在しないユーザーを取得 | ステータス404、エラーNOT_FOUND |
+| TC-004 | POST /users - 有効なデータでユーザー作成 | ステータス201、ユーザー作成 |
+| TC-005 | POST /users - 重複メールでユーザー作成 | ステータス409、エラーCONFLICT |
+| TC-006 | POST /users - 弱いパスワードでユーザー作成 | ステータス422、バリデーションエラー |
+| TC-007 | PUT /users/:id - 更新成功 | ステータス200、データ更新 |
+| TC-008 | PUT /users/:id - 他のユーザーを更新（非Admin） | ステータス403、エラーFORBIDDEN |
+| TC-009 | DELETE /users/:id - ソフト削除 | ステータス200、ステータスがdeletedに変更 |
+| TC-010 | DELETE /users/:id - ハード削除 | ステータス200、レコードがDBから削除 |
+| TC-011 | トークンなしでアクセス | ステータス401、エラーUNAUTHORIZED |
 
 ---
 
@@ -653,6 +1046,17 @@ npm run test:coverage
 3. 制限の引き上げが必要な場合は管理者に連絡
 {{< /callout >}}
 
+{{< callout type="info" >}}
+**エラー: "バリデーションエラー" (422)**
+
+**原因:** 送信されたデータがフォーマットまたは制約に一致しない
+
+**解決方法:**
+1. レスポンスの`details`を注意深く読んで、どのフィールドにエラーがあるか確認
+2. ドキュメントでフィールドの制約を確認
+3. データを修正してリクエストを再試行
+{{< /callout >}}
+
 ### サポート連絡先
 
 解決できない問題が発生した場合:
@@ -667,9 +1071,10 @@ npm run test:coverage
 
 | バージョン | 日付 | 変更内容 |
 | :-------- | :--- | :------ |
-| v1.2.0 | 2024-02-20 | ユーザーに`metadata`フィールドを追加 |
-| v1.1.0 | 2024-02-01 | ページネーションAPIを追加 |
-| v1.0.0 | 2024-01-15 | 初回リリース |
+| v1.3.0 | 2024-02-20 | ソフト/ハード削除付きDELETEエンドポイントを追加 |
+| v1.2.0 | 2024-02-15 | ユーザー更新用PUTエンドポイントを追加 |
+| v1.1.0 | 2024-02-01 | ページネーション、フィルタ、検索APIを追加 |
+| v1.0.0 | 2024-01-15 | GETとPOSTで初回リリース |
 
 ---
 

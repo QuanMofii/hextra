@@ -1,6 +1,6 @@
 ---
 title: "LaTeX"
-weight: 4
+weight: 6
 ---
 
 Biểu thức toán LaTeX được hiển thị bằng \(\KaTeX\) ([katex.org](https://katex.org/)) mặc định. Chỉ cần thêm vào nội dung Markdown mà không cần cấu hình thêm.

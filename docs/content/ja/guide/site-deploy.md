@@ -1,5 +1,6 @@
 ---
-title: サイトのデプロイ
+title: サイトデプロイ
+weight: 9
 prev: /guide/shortcodes
 next: /docs/advanced
 ---

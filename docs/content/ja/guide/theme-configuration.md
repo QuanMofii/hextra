@@ -1,5 +1,5 @@
 ---
-title: 設定
+title: テーマ設定
 weight: 2
 tags:
   - 設定

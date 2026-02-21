@@ -1,6 +1,6 @@
 ---
 title: 短代码
-weight: 9
+weight: 8
 prev: /guide/diagrams
 next: /guide/shortcodes/callout
 ---

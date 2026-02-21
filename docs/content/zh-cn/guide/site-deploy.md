@@ -1,5 +1,6 @@
 ---
-title: 部署站点
+title: 站点部署
+weight: 9
 prev: /guide/shortcodes
 next: /docs/advanced
 ---

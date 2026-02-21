@@ -1,6 +1,6 @@
 ---
 title: ダイアグラム
-weight: 6
+weight: 7
 next: /guide/shortcodes
 ---
 

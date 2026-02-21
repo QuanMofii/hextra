@@ -1,5 +1,5 @@
 ---
-title: Cấu hình
+title: Cấu hình Theme
 weight: 2
 tags:
   - Config

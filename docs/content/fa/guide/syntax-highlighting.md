@@ -1,6 +1,6 @@
 ---
 title: "رنگ‌آمیزی نحوی"
-weight: 3
+weight: 5
 ---
 
 Hugo از [Chroma](https://github.com/alecthomas/chroma)، یک رنگ‌آمیزی نحوی همه‌منظوره در Go خالص، برای رنگ‌آمیزی نحوی استفاده می‌کند.

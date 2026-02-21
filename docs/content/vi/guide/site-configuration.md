@@ -1,7 +1,7 @@
 ---
 title: Cấu hình Site
 linkTitle: Cấu hình Site
-weight: 9
+weight: 3
 ---
 
 Hướng dẫn này giải thích cách cấu hình trang tài liệu này cho doanh nghiệp hoặc dự án của bạn. Tất cả thông tin dự án được tập trung trong một file cấu hình duy nhất, giúp việc đổi thương hiệu và triển khai cho các tổ chức khác nhau trở nên dễ dàng.

@@ -1,6 +1,6 @@
 ---
 title: "Tô sáng cú pháp"
-weight: 3
+weight: 5
 ---
 
 Hugo dùng [Chroma](https://github.com/alecthomas/chroma), công cụ tô sáng cú pháp thuần Go, để tô sáng mã. Nên dùng dấu backtick cho khối mã trong nội dung Markdown. Ví dụ:

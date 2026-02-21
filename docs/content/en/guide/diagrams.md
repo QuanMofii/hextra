@@ -1,6 +1,6 @@
 ---
 title: Diagrams
-weight: 6
+weight: 7
 next: /guide/shortcodes
 ---
 

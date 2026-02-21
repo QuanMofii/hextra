@@ -1,6 +1,6 @@
 ---
 title: "语法高亮"
-weight: 3
+weight: 5
 ---
 
 Hugo 使用纯 Go 编写的通用语法高亮工具 [Chroma](https://github.com/alecthomas/chroma) 来实现代码高亮。建议在 Markdown 内容中使用反引号标记代码块，例如：

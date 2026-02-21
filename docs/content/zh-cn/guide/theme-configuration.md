@@ -1,5 +1,5 @@
 ---
-title: 配置
+title: 主题配置
 weight: 2
 tags:
   - 配置

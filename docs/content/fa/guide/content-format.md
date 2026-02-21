@@ -5,6 +5,9 @@ weight: 10
 
 این سند ساختار استاندارد برای نوشتن مستندات در پروژه‌های بزرگ را توضیح می‌دهد. هدف اطمینان از یکپارچگی، قابلیت نگهداری و وضوح برای همه اعضای تیم است.
 
+> [!NOTE]
+> این سند در سراسر از **User Management API** به عنوان مثال توضیحی استفاده می‌کند. هنگام اعمال به پروژه خود، با دامنه/ماژول مربوطه جایگزین کنید.
+
 <!--more-->
 
 ## نمای کلی
@@ -14,7 +17,7 @@ weight: 10
 1. **مقدمه** - نمای کلی ویژگی/ماژول
 2. **منطق کسب‌وکار** - توضیح فرآیندهای کسب‌وکار
 3. **منطق پیاده‌سازی** - جزئیات فنی پیاده‌سازی
-4. **مرجع API** - مستندات کامل API
+4. **مرجع API** - مستندات کامل API (CRUD: Create, Read, Update, Delete)
 5. **تست** - راهنمای تست
 6. **عیب‌یابی** - حل مشکلات رایج
 
@@ -27,6 +30,8 @@ weight: 10
 ### هدف
 
 به طور خلاصه هدف این ویژگی در سیستم را توضیح دهید.
+
+> **مثال (User Management):** ماژول User Management قابلیت‌های مدیریت کاربر در سیستم را فراهم می‌کند، شامل ایجاد، به‌روزرسانی، حذف و پرس‌وجوی اطلاعات کاربر.
 
 ### دامنه
 
@@ -48,15 +53,23 @@ weight: 10
 
 ### فرآیند کسب‌وکار
 
-جریان اصلی کسب‌وکار ویژگی را توضیح دهید.
+جریان اصلی کسب‌وکار ویژگی را با نمودار توضیح دهید.
+
+> **مثال (User Management):** جریان فرآیند ایجاد کاربر جدید:
 
 ```mermaid
 flowchart TD
-    A[کاربر درخواست ارسال می‌کند] --> B{اعتبارسنجی توکن}
-    B -->|معتبر| C[پردازش منطق کسب‌وکار]
-    B -->|نامعتبر| D[بازگشت خطای 401]
-    C --> E[ذخیره در پایگاه داده]
-    E --> F[بازگشت نتیجه]
+    A[کلاینت درخواست ارسال می‌کند] --> B{اعتبارسنجی توکن}
+    B -->|نامعتبر| C[بازگشت خطای 401]
+    B -->|معتبر| D{بررسی مجوز Admin}
+    D -->|بدون مجوز| E[بازگشت خطای 403]
+    D -->|دارای مجوز| F[اعتبارسنجی داده]
+    F -->|نامعتبر| G[بازگشت خطای 422]
+    F -->|معتبر| H{ایمیل موجود است؟}
+    H -->|بله| I[بازگشت خطای 409]
+    H -->|خیر| J[ایجاد کاربر جدید]
+    J --> K[ارسال ایمیل تأیید]
+    K --> L[بازگشت 201 Created]
 ```
 
 ### قوانین کسب‌وکار
@@ -146,360 +159,22 @@ Auth Service بررسی می‌کند:
 
 ## 4. مرجع API
 
-### 4.1 ایجاد کاربر جدید
+> [!NOTE]
+> این بخش نحوه نوشتن مستندات کامل API با 5 endpoint پایه CRUD را نشان می‌دهد. مثال از **User Management API** استفاده می‌کند.
 
-ایجاد یک حساب کاربری جدید در سیستم.
+### نمای کلی Endpoint‌ها
 
-#### اطلاعات پایه
-
-| ویژگی | مقدار |
-| :---- | :---- |
-| **متد** | `POST` |
-| **URL** | `/api/v1/users` |
-| **احراز هویت** | Bearer Token (Admin) |
-| **Content-Type** | `application/json` |
-
-#### هدرها
-
-| هدر | نوع | الزامی | توضیحات |
-| :-- | :-- | :----- | :------ |
-| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
-| `Content-Type` | string | ✅ | باید `application/json` باشد |
-| `X-Request-ID` | string | ❌ | شناسه برای ردیابی درخواست. در صورت عدم ارائه خودکار تولید می‌شود |
-| `Accept-Language` | string | ❌ | زبان پاسخ. پیش‌فرض: `fa` |
-
-#### بدنه درخواست
-
-```json
-{
-  "email": "user@example.com",
-  "password": "SecureP@ss123",
-  "fullName": "علی محمدی",
-  "phoneNumber": "+989121234567",
-  "role": "user",
-  "metadata": {
-    "department": "Engineering",
-    "employeeId": "EMP001"
-  }
-}
-```
-
-#### جزئیات ویژگی‌های درخواست
-
-| ویژگی | نوع | الزامی | توضیحات | محدودیت‌ها |
-| :---- | :-- | :----- | :------ | :-------- |
-| `email` | string | ✅ | آدرس ایمیل کاربر. به عنوان نام کاربری ورود استفاده می‌شود | ایمیل معتبر، حداکثر 255 کاراکتر، یکتا در سیستم |
-| `password` | string | ✅ | رمز عبور ورود | حداقل 8 کاراکتر، باید شامل حروف بزرگ، کوچک، عدد و کاراکتر خاص باشد |
-| `fullName` | string | ✅ | نام کامل | حداقل 2 کاراکتر، حداکثر 100 کاراکتر |
-| `phoneNumber` | string | ❌ | شماره تلفن | فرمت E.164 (مثال: +989121234567) |
-| `role` | string | ❌ | نقش کاربر | یکی از: `user`, `admin`, `moderator`. پیش‌فرض: `user` |
-| `metadata` | object | ❌ | اطلاعات اضافی سفارشی | آبجکت JSON، حداکثر 10KB |
-| `metadata.department` | string | ❌ | بخش | حداکثر 50 کاراکتر |
-| `metadata.employeeId` | string | ❌ | شناسه کارمند | حداکثر 20 کاراکتر |
-
-#### cURL
-
-```bash
-curl --request POST \
-  --url 'https://api.example.com/api/v1/users' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' \
-  --header 'Content-Type: application/json' \
-  --header 'X-Request-ID: req-123456' \
-  --data '{
-    "email": "user@example.com",
-    "password": "SecureP@ss123",
-    "fullName": "علی محمدی",
-    "phoneNumber": "+989121234567",
-    "role": "user",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    }
-  }'
-```
-
-#### پاسخ موفق
-
-**کد وضعیت:** `201 Created`
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
-    "email": "user@example.com",
-    "fullName": "علی محمدی",
-    "phoneNumber": "+989121234567",
-    "role": "user",
-    "status": "pending_verification",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    },
-    "createdAt": "2024-02-20T10:30:00.000Z",
-    "updatedAt": "2024-02-20T10:30:00.000Z"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-
-#### جزئیات ویژگی‌های پاسخ
-
-| ویژگی | نوع | توضیحات |
-| :---- | :-- | :------ |
-| `success` | boolean | وضعیت پردازش درخواست. `true` در صورت موفقیت |
-| `data.id` | string | شناسه یکتای کاربر، فرمت ULID با پیشوند `usr_` |
-| `data.email` | string | ایمیل ثبت شده |
-| `data.fullName` | string | نام کامل |
-| `data.phoneNumber` | string | شماره تلفن (در صورت ارائه) |
-| `data.role` | string | نقش اختصاص داده شده |
-| `data.status` | string | وضعیت حساب: `pending_verification`, `active`, `suspended`, `deleted` |
-| `data.metadata` | object | اطلاعات اضافی |
-| `data.createdAt` | string | زمان ایجاد (ISO 8601) |
-| `data.updatedAt` | string | زمان آخرین به‌روزرسانی (ISO 8601) |
-| `meta.requestId` | string | شناسه درخواست برای ردیابی |
-| `meta.timestamp` | string | زمان پردازش درخواست |
-
-#### پاسخ‌های خطا
-
-{{< tabs >}}
-
-{{< tab name="400 Bad Request" >}}
-**علت:** بدنه درخواست فرمت JSON معتبر نیست یا فیلدهای الزامی وجود ندارند.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "BAD_REQUEST",
-    "message": "بدنه درخواست نامعتبر است",
-    "details": "امکان تجزیه بدنه JSON وجود ندارد"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="401 Unauthorized" >}}
-**علت:** توکن نامعتبر، منقضی شده یا فاقد امتیازات مدیر است.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "توکن نامعتبر یا منقضی شده است",
-    "details": "لطفاً دوباره وارد شوید تا توکن جدید دریافت کنید"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="409 Conflict" >}}
-**علت:** ایمیل قبلاً در سیستم وجود دارد.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "CONFLICT",
-    "message": "ایمیل قبلاً استفاده شده است",
-    "details": "ایمیل user@example.com قبلاً در سیستم وجود دارد"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="422 Validation Error" >}}
-**علت:** داده‌ها الزامات اعتبارسنجی را برآورده نمی‌کنند.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "داده‌ها نامعتبر هستند",
-    "details": [
-      {
-        "field": "password",
-        "message": "رمز عبور باید حداقل 8 کاراکتر باشد، شامل حروف بزرگ، کوچک، عدد و کاراکتر خاص"
-      },
-      {
-        "field": "phoneNumber",
-        "message": "شماره تلفن با فرمت E.164 مطابقت ندارد"
-      }
-    ]
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="500 Internal Error" >}}
-**علت:** خطای ناشناخته سرور.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INTERNAL_ERROR",
-    "message": "خطای سیستمی رخ داده است",
-    "details": "لطفاً بعداً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید"
-  },
-  "meta": {
-    "requestId": "req-123456",
-    "timestamp": "2024-02-20T10:30:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< /tabs >}}
+| متد | Endpoint | توضیحات | مجوز |
+| :-- | :------- | :------ | :--- |
+| `GET` | `/api/v1/users` | لیست کاربران (با صفحه‌بندی) | Admin |
+| `GET` | `/api/v1/users/{id}` | دریافت جزئیات کاربر | User/Admin |
+| `POST` | `/api/v1/users` | ایجاد کاربر جدید | Admin |
+| `PUT` | `/api/v1/users/{id}` | به‌روزرسانی اطلاعات کاربر | User/Admin |
+| `DELETE` | `/api/v1/users/{id}` | حذف کاربر | Admin |
 
 ---
 
-### 4.2 دریافت اطلاعات کاربر
-
-دریافت اطلاعات جزئی یک کاربر با شناسه.
-
-#### اطلاعات پایه
-
-| ویژگی | مقدار |
-| :---- | :---- |
-| **متد** | `GET` |
-| **URL** | `/api/v1/users/{userId}` |
-| **احراز هویت** | Bearer Token |
-| **Content-Type** | `application/json` |
-
-#### پارامترهای مسیر
-
-| پارامتر | نوع | الزامی | توضیحات |
-| :------ | :-- | :----- | :------ |
-| `userId` | string | ✅ | شناسه کاربر برای دریافت. فرمت: `usr_<ULID>` |
-
-#### هدرها
-
-| هدر | نوع | الزامی | توضیحات |
-| :-- | :-- | :----- | :------ |
-| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
-
-#### cURL
-
-```bash
-curl --request GET \
-  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
-```
-
-#### پاسخ موفق
-
-**کد وضعیت:** `200 OK`
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
-    "email": "user@example.com",
-    "fullName": "علی محمدی",
-    "phoneNumber": "+989121234567",
-    "role": "user",
-    "status": "active",
-    "metadata": {
-      "department": "Engineering",
-      "employeeId": "EMP001"
-    },
-    "lastLoginAt": "2024-02-20T09:00:00.000Z",
-    "createdAt": "2024-02-15T10:30:00.000Z",
-    "updatedAt": "2024-02-20T09:00:00.000Z"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-
-#### پاسخ‌های خطا
-
-{{< tabs >}}
-
-{{< tab name="401 Unauthorized" >}}
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "توکن نامعتبر یا منقضی شده است"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="403 Forbidden" >}}
-**علت:** کاربر مجوز مشاهده اطلاعات کاربر دیگر را ندارد.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "FORBIDDEN",
-    "message": "دسترسی به این منبع رد شده است",
-    "details": "شما فقط می‌توانید اطلاعات خود را مشاهده کنید"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< tab name="404 Not Found" >}}
-**علت:** شناسه کاربر وجود ندارد.
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "کاربر یافت نشد",
-    "details": "کاربر با شناسه usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF وجود ندارد"
-  },
-  "meta": {
-    "requestId": "req-789012",
-    "timestamp": "2024-02-20T10:35:00.000Z"
-  }
-}
-```
-{{< /tab >}}
-
-{{< /tabs >}}
-
----
-
-### 4.3 لیست کاربران (با صفحه‌بندی)
+### 4.1 لیست کاربران
 
 دریافت لیست کاربران با پشتیبانی از صفحه‌بندی، فیلتر و مرتب‌سازی.
 
@@ -516,19 +191,26 @@ curl --request GET \
 | پارامتر | نوع | الزامی | توضیحات | پیش‌فرض |
 | :------ | :-- | :----- | :------ | :------ |
 | `page` | integer | ❌ | شماره صفحه (از 1 شروع می‌شود) | `1` |
-| `limit` | integer | ❌ | تعداد رکورد در هر صفحه | `20` |
-| `sort` | string | ❌ | فیلد مرتب‌سازی | `createdAt` |
+| `limit` | integer | ❌ | تعداد رکورد در هر صفحه (حداکثر 100) | `20` |
+| `sort` | string | ❌ | فیلد مرتب‌سازی: `createdAt`, `email`, `fullName` | `createdAt` |
 | `order` | string | ❌ | ترتیب: `asc` یا `desc` | `desc` |
-| `status` | string | ❌ | فیلتر بر اساس وضعیت | - |
-| `role` | string | ❌ | فیلتر بر اساس نقش | - |
+| `status` | string | ❌ | فیلتر بر اساس وضعیت: `active`, `pending_verification`, `suspended` | - |
+| `role` | string | ❌ | فیلتر بر اساس نقش: `user`, `admin`, `moderator` | - |
 | `search` | string | ❌ | جستجو بر اساس ایمیل یا نام | - |
+
+#### هدرها
+
+| هدر | نوع | الزامی | توضیحات |
+| :-- | :-- | :----- | :------ |
+| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
+| `X-Request-ID` | string | ❌ | شناسه برای ردیابی درخواست |
 
 #### cURL
 
 ```bash
 curl --request GET \
   --url 'https://api.example.com/api/v1/users?page=1&limit=10&status=active&sort=createdAt&order=desc' \
-  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+  --header 'Authorization: Bearer <your_admin_token>'
 ```
 
 #### پاسخ موفق
@@ -571,24 +253,729 @@ curl --request GET \
 }
 ```
 
+#### پاسخ‌های خطا
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "توکن نامعتبر یا منقضی شده است"
+  },
+  "meta": {
+    "requestId": "req-345678",
+    "timestamp": "2024-02-20T10:40:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "دسترسی رد شد",
+    "details": "فقط Admin می‌تواند لیست کاربران را مشاهده کند"
+  },
+  "meta": {
+    "requestId": "req-345678",
+    "timestamp": "2024-02-20T10:40:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.2 دریافت جزئیات کاربر
+
+دریافت اطلاعات جزئی یک کاربر با شناسه.
+
+#### اطلاعات پایه
+
+| ویژگی | مقدار |
+| :---- | :---- |
+| **متد** | `GET` |
+| **URL** | `/api/v1/users/{id}` |
+| **احراز هویت** | Bearer Token |
+
+#### پارامترهای مسیر
+
+| پارامتر | نوع | الزامی | توضیحات |
+| :------ | :-- | :----- | :------ |
+| `id` | string | ✅ | شناسه کاربر. فرمت: `usr_<ULID>` |
+
+#### هدرها
+
+| هدر | نوع | الزامی | توضیحات |
+| :-- | :-- | :----- | :------ |
+| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
+
+#### cURL
+
+```bash
+curl --request GET \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_token>'
+```
+
+#### پاسخ موفق
+
+**کد وضعیت:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "user@example.com",
+    "fullName": "علی محمدی",
+    "phoneNumber": "+989121234567",
+    "role": "user",
+    "status": "active",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    },
+    "lastLoginAt": "2024-02-20T09:00:00.000Z",
+    "createdAt": "2024-02-15T10:30:00.000Z",
+    "updatedAt": "2024-02-20T09:00:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+
+#### جزئیات ویژگی‌های پاسخ
+
+| ویژگی | نوع | توضیحات |
+| :---- | :-- | :------ |
+| `id` | string | شناسه یکتای کاربر، فرمت ULID با پیشوند `usr_` |
+| `email` | string | ایمیل ثبت شده |
+| `fullName` | string | نام کامل |
+| `phoneNumber` | string \| null | شماره تلفن (در صورت ارائه) |
+| `role` | string | نقش: `user`, `admin`, `moderator` |
+| `status` | string | وضعیت: `pending_verification`, `active`, `suspended`, `deleted` |
+| `metadata` | object \| null | اطلاعات اضافی سفارشی |
+| `lastLoginAt` | string \| null | زمان آخرین ورود (ISO 8601) |
+| `createdAt` | string | زمان ایجاد (ISO 8601) |
+| `updatedAt` | string | زمان آخرین به‌روزرسانی (ISO 8601) |
+
+#### پاسخ‌های خطا
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "توکن نامعتبر یا منقضی شده است"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "دسترسی به این منبع رد شده است",
+    "details": "شما فقط می‌توانید اطلاعات خود را مشاهده کنید"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "کاربر یافت نشد",
+    "details": "کاربر با شناسه usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF وجود ندارد"
+  },
+  "meta": {
+    "requestId": "req-789012",
+    "timestamp": "2024-02-20T10:35:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.3 ایجاد کاربر (Create)
+
+ایجاد یک حساب کاربری جدید در سیستم.
+
+#### اطلاعات پایه
+
+| ویژگی | مقدار |
+| :---- | :---- |
+| **متد** | `POST` |
+| **URL** | `/api/v1/users` |
+| **احراز هویت** | Bearer Token (Admin) |
+| **Content-Type** | `application/json` |
+
+#### هدرها
+
+| هدر | نوع | الزامی | توضیحات |
+| :-- | :-- | :----- | :------ |
+| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
+| `Content-Type` | string | ✅ | باید `application/json` باشد |
+| `X-Request-ID` | string | ❌ | شناسه برای ردیابی درخواست |
+
+#### بدنه درخواست
+
+```json
+{
+  "email": "newuser@example.com",
+  "password": "SecureP@ss123",
+  "fullName": "علی محمدی",
+  "phoneNumber": "+989121234567",
+  "role": "user",
+  "metadata": {
+    "department": "Engineering",
+    "employeeId": "EMP001"
+  }
+}
+```
+
+#### جزئیات ویژگی‌های درخواست
+
+| ویژگی | نوع | الزامی | توضیحات | محدودیت‌ها |
+| :---- | :-- | :----- | :------ | :-------- |
+| `email` | string | ✅ | آدرس ایمیل، به عنوان نام کاربری استفاده می‌شود | ایمیل معتبر، حداکثر 255 کاراکتر، یکتا |
+| `password` | string | ✅ | رمز عبور ورود | حداقل 8 کاراکتر، باید شامل حروف بزرگ، کوچک، عدد و کاراکتر خاص باشد |
+| `fullName` | string | ✅ | نام کامل | 2-100 کاراکتر |
+| `phoneNumber` | string | ❌ | شماره تلفن | فرمت E.164 (مثال: +989121234567) |
+| `role` | string | ❌ | نقش کاربر | `user` \| `admin` \| `moderator`. پیش‌فرض: `user` |
+| `metadata` | object | ❌ | اطلاعات اضافی | آبجکت JSON، حداکثر 10KB |
+
+#### cURL
+
+```bash
+curl --request POST \
+  --url 'https://api.example.com/api/v1/users' \
+  --header 'Authorization: Bearer <your_admin_token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "newuser@example.com",
+    "password": "SecureP@ss123",
+    "fullName": "علی محمدی",
+    "phoneNumber": "+989121234567",
+    "role": "user",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    }
+  }'
+```
+
+#### پاسخ موفق
+
+**کد وضعیت:** `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "newuser@example.com",
+    "fullName": "علی محمدی",
+    "phoneNumber": "+989121234567",
+    "role": "user",
+    "status": "pending_verification",
+    "metadata": {
+      "department": "Engineering",
+      "employeeId": "EMP001"
+    },
+    "createdAt": "2024-02-20T10:30:00.000Z",
+    "updatedAt": "2024-02-20T10:30:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+
+#### پاسخ‌های خطا
+
+{{< tabs >}}
+
+{{< tab name="400 Bad Request" >}}
+**علت:** بدنه درخواست فرمت JSON معتبر نیست.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "بدنه درخواست نامعتبر است",
+    "details": "امکان تجزیه بدنه JSON وجود ندارد"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="401 Unauthorized" >}}
+**علت:** توکن نامعتبر یا منقضی شده.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "توکن نامعتبر یا منقضی شده است",
+    "details": "لطفاً دوباره وارد شوید تا توکن جدید دریافت کنید"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+**علت:** کاربر مجوز Admin ندارد.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "مجوز انجام این عملیات را ندارید",
+    "details": "فقط Admin می‌تواند کاربر جدید ایجاد کند"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="409 Conflict" >}}
+**علت:** ایمیل قبلاً در سیستم وجود دارد.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONFLICT",
+    "message": "ایمیل قبلاً استفاده شده است",
+    "details": "ایمیل newuser@example.com قبلاً در سیستم وجود دارد"
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="422 Validation Error" >}}
+**علت:** داده‌ها الزامات اعتبارسنجی را برآورده نمی‌کنند.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "داده‌ها نامعتبر هستند",
+    "details": [
+      {
+        "field": "password",
+        "message": "رمز عبور باید حداقل 8 کاراکتر باشد، شامل حروف بزرگ، کوچک، عدد و کاراکتر خاص"
+      },
+      {
+        "field": "phoneNumber",
+        "message": "شماره تلفن با فرمت E.164 مطابقت ندارد"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-123456",
+    "timestamp": "2024-02-20T10:30:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.4 به‌روزرسانی کاربر (Update)
+
+به‌روزرسانی اطلاعات یک کاربر.
+
+#### اطلاعات پایه
+
+| ویژگی | مقدار |
+| :---- | :---- |
+| **متد** | `PUT` |
+| **URL** | `/api/v1/users/{id}` |
+| **احراز هویت** | Bearer Token |
+| **Content-Type** | `application/json` |
+
+#### پارامترهای مسیر
+
+| پارامتر | نوع | الزامی | توضیحات |
+| :------ | :-- | :----- | :------ |
+| `id` | string | ✅ | شناسه کاربر برای به‌روزرسانی. فرمت: `usr_<ULID>` |
+
+#### هدرها
+
+| هدر | نوع | الزامی | توضیحات |
+| :-- | :-- | :----- | :------ |
+| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
+| `Content-Type` | string | ✅ | باید `application/json` باشد |
+
+#### بدنه درخواست
+
+> [!NOTE]
+> فقط فیلدهایی که می‌خواهید به‌روزرسانی کنید را ارسال کنید. فیلدهای ارسال نشده مقادیر فعلی خود را حفظ می‌کنند.
+
+```json
+{
+  "fullName": "حسن رضایی",
+  "phoneNumber": "+989129876543",
+  "metadata": {
+    "department": "Marketing",
+    "employeeId": "EMP002"
+  }
+}
+```
+
+#### جزئیات ویژگی‌های درخواست
+
+| ویژگی | نوع | الزامی | توضیحات | محدودیت‌ها |
+| :---- | :-- | :----- | :------ | :-------- |
+| `fullName` | string | ❌ | نام کامل جدید | 2-100 کاراکتر |
+| `phoneNumber` | string | ❌ | شماره تلفن جدید | فرمت E.164 |
+| `role` | string | ❌ | نقش جدید (فقط Admin) | `user` \| `admin` \| `moderator` |
+| `status` | string | ❌ | وضعیت جدید (فقط Admin) | `active` \| `suspended` |
+| `metadata` | object | ❌ | اطلاعات اضافی | آبجکت JSON، حداکثر 10KB |
+
+> [!WARNING]
+> فیلدهای `email` و `password` از طریق این endpoint قابل به‌روزرسانی نیستند. برای تغییر ایمیل/رمز عبور از endpoint‌های جداگانه استفاده کنید.
+
+#### cURL
+
+```bash
+curl --request PUT \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "fullName": "حسن رضایی",
+    "phoneNumber": "+989129876543",
+    "metadata": {
+      "department": "Marketing",
+      "employeeId": "EMP002"
+    }
+  }'
+```
+
+#### پاسخ موفق
+
+**کد وضعیت:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "email": "user@example.com",
+    "fullName": "حسن رضایی",
+    "phoneNumber": "+989129876543",
+    "role": "user",
+    "status": "active",
+    "metadata": {
+      "department": "Marketing",
+      "employeeId": "EMP002"
+    },
+    "createdAt": "2024-02-15T10:30:00.000Z",
+    "updatedAt": "2024-02-20T14:00:00.000Z"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+
+#### پاسخ‌های خطا
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "توکن نامعتبر یا منقضی شده است"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+**علت:** کاربر مجوز به‌روزرسانی کاربر دیگر را ندارد، یا هنگام به‌روزرسانی role/status، Admin نیست.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "مجوز به‌روزرسانی این منبع را ندارید",
+    "details": "شما فقط می‌توانید اطلاعات خود را به‌روزرسانی کنید"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "کاربر یافت نشد",
+    "details": "کاربر با شناسه usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF وجود ندارد"
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="422 Validation Error" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "داده‌ها نامعتبر هستند",
+    "details": [
+      {
+        "field": "phoneNumber",
+        "message": "شماره تلفن با فرمت E.164 مطابقت ندارد"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req-456789",
+    "timestamp": "2024-02-20T14:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+---
+
+### 4.5 حذف کاربر (Delete)
+
+حذف یک کاربر از سیستم.
+
+#### اطلاعات پایه
+
+| ویژگی | مقدار |
+| :---- | :---- |
+| **متد** | `DELETE` |
+| **URL** | `/api/v1/users/{id}` |
+| **احراز هویت** | Bearer Token (Admin) |
+
+#### پارامترهای مسیر
+
+| پارامتر | نوع | الزامی | توضیحات |
+| :------ | :-- | :----- | :------ |
+| `id` | string | ✅ | شناسه کاربر برای حذف. فرمت: `usr_<ULID>` |
+
+#### هدرها
+
+| هدر | نوع | الزامی | توضیحات |
+| :-- | :-- | :----- | :------ |
+| `Authorization` | string | ✅ | توکن احراز هویت. فرمت: `Bearer <token>` |
+
+#### پارامترهای کوئری (اختیاری)
+
+| پارامتر | نوع | الزامی | توضیحات | پیش‌فرض |
+| :------ | :-- | :----- | :------ | :------ |
+| `hard` | boolean | ❌ | `true` = حذف دائمی، `false` = حذف نرم | `false` |
+
+> [!WARNING]
+> وقتی `hard=true`، داده‌ها به طور دائمی حذف می‌شوند و قابل بازیابی نیستند. پیش‌فرض از حذف نرم (تغییر وضعیت به `deleted`) استفاده می‌کند.
+
+#### cURL
+
+```bash
+# حذف نرم (پیش‌فرض)
+curl --request DELETE \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF' \
+  --header 'Authorization: Bearer <your_admin_token>'
+
+# حذف سخت (دائمی)
+curl --request DELETE \
+  --url 'https://api.example.com/api/v1/users/usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF?hard=true' \
+  --header 'Authorization: Bearer <your_admin_token>'
+```
+
+#### پاسخ موفق
+
+**کد وضعیت:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF",
+    "deleted": true,
+    "deletedAt": "2024-02-20T15:00:00.000Z",
+    "hardDelete": false
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+
+#### پاسخ‌های خطا
+
+{{< tabs >}}
+
+{{< tab name="401 Unauthorized" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "توکن نامعتبر یا منقضی شده است"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="403 Forbidden" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "مجوز حذف کاربر را ندارید",
+    "details": "فقط Admin می‌تواند کاربران را حذف کند"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="404 Not Found" >}}
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "کاربر یافت نشد",
+    "details": "کاربر با شناسه usr_01HQ3K5XJPZ8VWMN4YGCR2BDEF وجود ندارد"
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< tab name="409 Conflict" >}}
+**علت:** به دلیل محدودیت‌های داده امکان حذف کاربر وجود ندارد.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONFLICT",
+    "message": "امکان حذف کاربر وجود ندارد",
+    "details": "این کاربر داده‌های مرتبط دارد. لطفاً ابتدا داده‌ها را حذف یا انتقال دهید."
+  },
+  "meta": {
+    "requestId": "req-567890",
+    "timestamp": "2024-02-20T15:00:00.000Z"
+  }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
 ---
 
 ## 5. تست
 
 ### تست‌های واحد
 
-فایل‌های تست برای این ماژول:
+فایل‌های تست برای ماژول:
 
 {{< filetree/container >}}
   {{< filetree/folder name="tests" >}}
     {{< filetree/folder name="unit" >}}
       {{< filetree/file name="user.service.spec.ts" >}}
       {{< filetree/file name="user.controller.spec.ts" >}}
-      {{< filetree/file name="auth.service.spec.ts" >}}
     {{< /filetree/folder >}}
     {{< filetree/folder name="integration" >}}
       {{< filetree/file name="user.api.spec.ts" >}}
-      {{< filetree/file name="auth.api.spec.ts" >}}
     {{< /filetree/folder >}}
     {{< filetree/folder name="e2e" >}}
       {{< filetree/file name="user-flow.spec.ts" >}}
@@ -616,11 +1003,17 @@ npm run test:coverage
 
 | مورد تست | توضیحات | نتیجه مورد انتظار |
 | :------- | :------ | :--------------- |
-| TC-001 | ایجاد کاربر با داده‌های معتبر | وضعیت 201، کاربر ایجاد شد |
-| TC-002 | ایجاد کاربر با ایمیل تکراری | وضعیت 409، خطای CONFLICT |
-| TC-003 | ایجاد کاربر با رمز عبور ضعیف | وضعیت 422، خطای اعتبارسنجی |
-| TC-004 | دریافت کاربر ناموجود | وضعیت 404، خطای NOT_FOUND |
-| TC-005 | دسترسی بدون توکن | وضعیت 401، خطای UNAUTHORIZED |
+| TC-001 | GET /users - لیست با صفحه‌بندی | وضعیت 200، تعداد رکورد صحیح |
+| TC-002 | GET /users/:id - دریافت کاربر موجود | وضعیت 200، اطلاعات کاربر |
+| TC-003 | GET /users/:id - دریافت کاربر ناموجود | وضعیت 404، خطای NOT_FOUND |
+| TC-004 | POST /users - ایجاد با داده‌های معتبر | وضعیت 201، کاربر ایجاد شد |
+| TC-005 | POST /users - ایجاد با ایمیل تکراری | وضعیت 409، خطای CONFLICT |
+| TC-006 | POST /users - ایجاد با رمز عبور ضعیف | وضعیت 422، خطای اعتبارسنجی |
+| TC-007 | PUT /users/:id - به‌روزرسانی موفق | وضعیت 200، داده‌ها به‌روز شد |
+| TC-008 | PUT /users/:id - به‌روزرسانی کاربر دیگر (غیر Admin) | وضعیت 403، خطای FORBIDDEN |
+| TC-009 | DELETE /users/:id - حذف نرم | وضعیت 200، وضعیت به deleted تغییر کرد |
+| TC-010 | DELETE /users/:id - حذف سخت | وضعیت 200، رکورد از DB حذف شد |
+| TC-011 | دسترسی بدون توکن | وضعیت 401، خطای UNAUTHORIZED |
 
 ---
 
@@ -653,6 +1046,17 @@ npm run test:coverage
 3. در صورت نیاز به افزایش محدودیت با مدیر تماس بگیرید
 {{< /callout >}}
 
+{{< callout type="info" >}}
+**خطا: "خطای اعتبارسنجی" (422)**
+
+**علت:** داده‌های ارسال شده با فرمت یا محدودیت‌ها مطابقت ندارند
+
+**راه‌حل:**
+1. `details` در پاسخ را با دقت بخوانید تا بفهمید کدام فیلد خطا دارد
+2. محدودیت‌های فیلد را در مستندات بررسی کنید
+3. داده‌ها را اصلاح کنید و درخواست را دوباره ارسال کنید
+{{< /callout >}}
+
 ### تماس با پشتیبانی
 
 اگر با مشکلاتی مواجه شدید که نمی‌توانید حل کنید:
@@ -667,9 +1071,10 @@ npm run test:coverage
 
 | نسخه | تاریخ | تغییرات |
 | :--- | :---- | :------ |
-| v1.2.0 | 2024-02-20 | افزودن فیلد `metadata` برای کاربر |
-| v1.1.0 | 2024-02-01 | افزودن API صفحه‌بندی |
-| v1.0.0 | 2024-01-15 | انتشار اولیه |
+| v1.3.0 | 2024-02-20 | افزودن endpoint DELETE با حذف نرم/سخت |
+| v1.2.0 | 2024-02-15 | افزودن endpoint PUT برای به‌روزرسانی کاربر |
+| v1.1.0 | 2024-02-01 | افزودن API صفحه‌بندی، فیلتر و جستجو |
+| v1.0.0 | 2024-01-15 | انتشار اولیه با GET و POST |
 
 ---
 

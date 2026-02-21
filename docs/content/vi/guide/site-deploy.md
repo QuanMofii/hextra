@@ -1,5 +1,6 @@
 ---
-title: Triển khai site
+title: Triển khai Site
+weight: 9
 prev: /guide/shortcodes
 next: /docs/advanced
 ---

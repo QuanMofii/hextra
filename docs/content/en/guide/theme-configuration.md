@@ -1,5 +1,5 @@
 ---
-title: Configuration
+title: Theme Configuration
 weight: 2
 tags:
   - Config

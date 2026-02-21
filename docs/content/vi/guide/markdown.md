@@ -1,6 +1,6 @@
 ---
 title: Markdown
-weight: 2
+weight: 4
 ---
 
 Hugo hỗ trợ cú pháp [Markdown](https://en.wikipedia.org/wiki/Markdown) để định dạng văn bản, tạo danh sách và hơn nữa. Trang này trình bày một số ví dụ cú pháp Markdown thường dùng.

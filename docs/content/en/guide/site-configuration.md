@@ -1,7 +1,7 @@
 ---
-title: Site Config
-linkTitle: Site Config
-weight: 9
+title: Site Configuration
+linkTitle: Site Configuration
+weight: 3
 ---
 
 This guide explains how to configure this documentation site for your business or project. All project-specific information is centralized in a single configuration file, making it easy to rebrand and deploy for different organizations.

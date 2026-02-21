@@ -1,6 +1,6 @@
 ---
 title: "LaTeX"
-weight: 4
+weight: 6
 ---
 
 LaTeX math expressions are rendered using \(\KaTeX\) ([katex.org](https://katex.org/)) by default. Simply start including them in your Markdown content without any manual configurations.

@@ -1,6 +1,6 @@
 ---
 title: "Syntax Highlighting"
-weight: 3
+weight: 5
 ---
 
 Hugo uses [Chroma](https://github.com/alecthomas/chroma), a general purpose syntax highlighter in pure Go, for syntax highlighting.

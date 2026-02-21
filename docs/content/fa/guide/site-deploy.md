@@ -1,5 +1,6 @@
 ---
 title: استقرار سایت
+weight: 9
 prev: /guide/shortcodes
 next: /docs/advanced
 ---

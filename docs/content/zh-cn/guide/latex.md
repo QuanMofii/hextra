@@ -1,6 +1,6 @@
 ---
 title: "数学公式"
-weight: 4
+weight: 6
 ---
 
 LaTeX 数学表达式默认使用 \(\KaTeX\) 渲染。直接在 Markdown 内容中使用即可，无需手动配置。

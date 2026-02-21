@@ -1,6 +1,6 @@
 ---
 title: Markdown
-weight: 2
+weight: 4
 ---
 
 Hugo از [Markdown](https://en.wikipedia.org/wiki/Markdown) برای قالب‌بندی متن، ایجاد لیست‌ها و موارد دیگر پشتیبانی می‌کند. این صفحه برخی از رایج‌ترین نمونه‌های نحوه استفاده از Markdown را به شما نشان می‌دهد.

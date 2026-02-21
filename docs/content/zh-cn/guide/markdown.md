@@ -1,6 +1,6 @@
 ---
 title: Markdown
-weight: 2
+weight: 4
 ---
 
 Hugo 支持使用 [Markdown](https://en.wikipedia.org/wiki/Markdown) 语法来格式化文本、创建列表等。本页将展示一些最常用的 Markdown 语法示例。
