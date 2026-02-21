@@ -1,5 +1,7 @@
-module github.com/QuanMofii/site-documentation/docs
+module github.com/imfing/hextra/docs
 
-go 1.20
+go 1.26
 
-replace github.com/QuanMofii/site-documentation => ../
+replace github.com/imfing/hextra => ../
+
+require github.com/imfing/hextra v0.12.0 // indirect
