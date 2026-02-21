@@ -152,13 +152,13 @@ languages:
     params:
       banner:
         message: |
-          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1.md" %}})
+          Your Project **v1.0** is here! 🎉 [What's new](/blog/setup-v1/)
   zh-cn:
     title: 您的项目名称
     params:
       banner:
         message: |
-          您的项目 **v1.0** 发布！🎉 [查看更新]({{% relref "blog/setup-v1.md" %}})
+          您的项目 **v1.0** 发布！🎉 [查看更新](/blog/setup-v1/)
 ```
 
 要关闭某语言的横幅，可删除该语言的 `params.banner` 块或将 `message` 设为空。

@@ -152,13 +152,13 @@ languages:
     params:
       banner:
         message: |
-          Your Project **v1.0** is here! 🎉 [What's new]({{% relref "blog/setup-v1.md" %}})
+          Your Project **v1.0** is here! 🎉 [What's new](/blog/setup-v1/)
   fa:
     title: نام پروژه
     params:
       banner:
         message: |
-          پروژه **v1.0** منتشر شد! 🎉 [جدیدها]({{% relref "blog/setup-v1.md" %}})
+          پروژه **v1.0** منتشر شد! 🎉 [جدیدها](/blog/setup-v1/)
 ```
 
 برای غیرفعال کردن بنر یک زبان، بلوک `params.banner` آن زبان را حذف کنید یا `message` را خالی بگذارید.
