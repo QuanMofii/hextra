@@ -1,6 +1,6 @@
-﻿---
+---
 title: تب‌ها
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 ## مثال

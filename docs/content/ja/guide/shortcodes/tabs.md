@@ -1,6 +1,6 @@
-﻿---
+---
 title: タブ
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 ## 例

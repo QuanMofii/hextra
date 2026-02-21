@@ -17,7 +17,7 @@ prev: /docs
 <img src="https://docs.github.com/assets/cb-77734/mw-1440/images/help/repository/use-this-template-button.webp" width="500" alt="صفحه مخزن GitHub که دکمه Use this template را نشان می‌دهد">
 
 ما یک [گردش کار GitHub Actions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow) ارائه کرده‌ایم که می‌تواند به صورت خودکار سایت شما را ساخته و در GitHub Pages مستقر کند و به صورت رایگان میزبانی کند.
-برای گزینه‌های بیشتر، [استقرار سایت](../guide/deploy-site) را بررسی کنید.
+برای گزینه‌های بیشتر، [استقرار سایت](../guide/site-deploy) را بررسی کنید.
 
 [🌐 نسخه نمایشی ↗](https://your-username.github.io/your-project-starter-template/)
 

@@ -1,6 +1,6 @@
-﻿---
+---
 title: Term
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 A built-in component to display a terminology definition.

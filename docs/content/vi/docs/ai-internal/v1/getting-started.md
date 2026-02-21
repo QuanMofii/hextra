@@ -17,7 +17,7 @@ Bạn có thể bắt đầu nhanh bằng cách dùng repository template ở tr
 <img src="https://docs.github.com/assets/cb-77734/mw-1440/images/help/repository/use-this-template-button.webp" width="500" alt="Trang repository GitHub hiển thị nút Use this template">
 
 Chúng tôi cung cấp [workflow GitHub Actions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow) giúp build và triển khai site lên GitHub Pages tự động, host miễn phí.
-Để xem thêm tùy chọn, tham khảo [Triển khai site](../guide/deploy-site).
+Để xem thêm tùy chọn, tham khảo [Triển khai site](../guide/site-deploy).
 
 [🌐 Demo ↗](https://your-username.github.io/your-project-starter-template/)
 

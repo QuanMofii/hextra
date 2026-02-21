@@ -3,7 +3,7 @@ title: ホーム用ショートコード
 linkTitle: ホーム
 sidebar:
   exclude: true
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 これらのショートコードの主な使用場所は、レイアウト `theme-home` 内です。

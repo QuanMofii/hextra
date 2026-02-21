@@ -1,6 +1,6 @@
-﻿---
+---
 title: 用語
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 用語の定義を表示するための組み込みコンポーネントです。

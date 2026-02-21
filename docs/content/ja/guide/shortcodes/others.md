@@ -1,7 +1,7 @@
 ---
 title: その他のショートコード
 linkTitle: その他
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 {{< callout type="warning" >}}

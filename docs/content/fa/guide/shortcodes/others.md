@@ -1,7 +1,7 @@
 ---
 title: سایر شورتکدها
 linkTitle: سایر
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 {{< callout type="warning" >}}

@@ -3,7 +3,7 @@ title: شورت‌کدهای صفحه اصلی
 linkTitle: صفحه اصلی
 sidebar:
   exclude: true
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 الاستخدام الرئيسي لهذه الرموز المختصرة هو داخل التخطيط `theme-home`.

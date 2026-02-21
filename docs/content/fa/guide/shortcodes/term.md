@@ -1,6 +1,6 @@
-﻿---
+---
 title: اصطلاح
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 یک مؤلفهٔ داخلی برای نمایش تعریف اصطلاحات.

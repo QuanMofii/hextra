@@ -3,7 +3,7 @@ title: 首页短代码
 linkTitle: 首页
 sidebar:
   exclude: true
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 这些短代码的主要用途是在布局`theme-home`内。

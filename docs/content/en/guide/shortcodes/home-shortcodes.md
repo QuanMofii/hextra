@@ -3,7 +3,7 @@ title: Home Shortcodes
 linkTitle: Home
 sidebar:
   exclude: true
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 The main usage of these shortcodes are within the layout `theme-home`.

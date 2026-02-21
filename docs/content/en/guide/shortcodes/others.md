@@ -1,7 +1,7 @@
 ---
 title: Other Shortcodes
 linkTitle: Others
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 {{< callout type="warning" >}}

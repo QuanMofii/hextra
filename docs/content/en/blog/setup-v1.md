@@ -18,14 +18,14 @@ This post describes the initial setup of this documentation project (version 1):
 ## What’s in this template
 
 - **Docs site** — Multi-language documentation (en, vi, ja, zh-cn, fa) with sidebar, search, and theme customization.
-- **Single config** — Project name, GitHub URLs, logo, and menu are driven from `hugo.yaml` (see [Site Config](/guide/site-config/)).
+- **Single config** — Project name, GitHub URLs, logo, and menu are driven from `hugo.yaml` (see [Site Config](/guide/site-configuration/)).
 - **Placeholders** — Replace `PROJECT_NAME`, `your-username`, `your-project`, and `{author}` / `{project_name}` with your values (see the same guide).
 
 ## Quick start
 
-1. Replace GitHub and project placeholders (see [Replacing GitHub URL Placeholders](/guide/site-config/#replacing-github-url-placeholders)).
+1. Replace GitHub and project placeholders (see [Replacing GitHub URL Placeholders](/guide/site-configuration/#replacing-github-url-placeholders)).
 2. Update `docs/hugo.yaml`: `baseURL`, `title`, `params.project.*`, and language titles.
 3. Update `i18n/*.yaml` for copyright and any menu labels you need.
 4. Run `npm install` then `npm run dev:theme` from the repo root.
 
-For a full checklist, see [Site Config](/guide/site-config/).
+For a full checklist, see [Site Config](/guide/site-configuration/).

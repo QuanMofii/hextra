@@ -1,7 +1,7 @@
 ---
 title: 其他短代码
 linkTitle: 其他
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 {{< callout type="warning" >}}

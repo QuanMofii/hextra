@@ -1,6 +1,6 @@
-﻿---
+---
 title: 术语
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 一个用于显示术语定义的内置组件。

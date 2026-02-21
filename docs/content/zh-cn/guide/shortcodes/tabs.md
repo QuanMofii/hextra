@@ -1,6 +1,6 @@
-﻿---
+---
 title: 标签页
-next: /guide/deploy-site
+next: /guide/site-deploy
 ---
 
 ## 示例
