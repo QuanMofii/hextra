@@ -1,5 +1,5 @@
-module github.com/{author}/{project_name}/docs
+module github.com/QuanMofii/site-documentation/docs
 
 go 1.20
 
-replace github.com/{author}/{project_name} => ../
+replace github.com/QuanMofii/site-documentation => ../
